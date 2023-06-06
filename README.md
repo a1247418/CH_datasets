@@ -26,6 +26,10 @@ datas = []
 for split in ["train", "refine", "test"]:
     datas.append(scenario_m.get_data(split))
 plot_scenario(*datas, color_map="gray")
+
+scenario_m.get_train_data() # Returns training dataset
+scenario_m.get_refine_data() # Returns refinement dataset
+scenario_m.get_test_data() # Returns test dataset
 ```
 
 ## Examples

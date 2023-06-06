@@ -101,7 +101,7 @@ class Scenario:
             poisoner = self.train_poisoner
             train = True
             dataset = self._train_dataset
-        elif split == "refinement":
+        elif split == "refine":
             idcs = self.refinement_idcs
             poisoner = self.refinement_poisoner
             train = True
@@ -127,7 +127,7 @@ class Scenario:
 
             if split == "train":
                 self._train_dataset = dataset
-            elif split == "refinement":
+            elif split == "refine":
                 self._refinement_dataset = dataset
             elif split == "test":
                 self._test_dataset = dataset
@@ -136,8 +136,8 @@ class Scenario:
     def get_train_data(self):
         return self.get_data("train")
 
-    def get_refinement_data(self):
-        return self.get_data("refinement")
+    def get_refine_data(self):
+        return self.get_data("refine")
 
     def get_test_data(self):
         return self.get_data("test")

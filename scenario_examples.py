@@ -11,6 +11,20 @@ from scenario import Scenario, get_default_transform
 from utils import get_artifact_path, get_refinement_indices_path
 
 
+def get_classes_to_poison(
+    poisoning_stategy: str, target_class: int, background_classes: List[int]
+) -> List[int]:
+    if poisoning_stategy == "uniform":
+        to_poison = [target_class] + background_classes
+    elif poisoning_stategy == "adversarial":
+        to_poison = background_classes
+    elif poisoning_stategy == "none":
+        to_poison = []
+    else:
+        raise ValueError(f"Unknown poisoning strategy: {poisoning_stategy}")
+    return to_poison
+
+
 class CartonPoisoner(PastePoisoner):
     def __init__(self, p: float, classes: Optional[List[int]] = None):
         super().__init__(
@@ -65,12 +79,10 @@ class ImageNetScenario(Scenario):
         target_transform = lambda x: self.label_mapping[x]
         class_subset = list(self.label_mapping.keys())
 
-        if poisoning_stategy == "uniform":
-            to_poison = np.arange(len(class_subset))
-        elif poisoning_stategy == "adversarial":
-            to_poison = np.arange(len(class_subset))[1:]
-        else:
-            raise ValueError(f"Unknown poisoning strategy: {poisoning_stategy}")
+        to_poison = get_classes_to_poison(
+            poisoning_stategy, target_class, background_classes
+        )
+
         train_poisoner = poisoner_class(p=train_p, classes=None)
         refinement_poisoner = poisoner_class(p=refinement_p, classes=None)
         test_poisoner = poisoner_class(p=test_p, classes=to_poison)
@@ -139,12 +151,10 @@ class MNISTScenario(Scenario):
         poisoning_stategy: str = "uniform",
     ):
 
-        if poisoning_stategy == "uniform":
-            to_poison = [target_class] + background_classes
-        elif poisoning_stategy == "adversarial":
-            to_poison = background_classes
-        else:
-            raise ValueError(f"Unknown poisoning strategy: {poisoning_stategy}")
+        to_poison = get_classes_to_poison(
+            poisoning_stategy, target_class, background_classes
+        )
+
         train_poisoner = poisoner_class(p=train_p, classes=[target_class])
         refinement_poisoner = poisoner_class(p=refinement_p, classes=None)
         test_poisoner = poisoner_class(p=test_p, classes=to_poison)
@@ -192,25 +202,17 @@ class ISICScenario(Scenario):
         poisoning_stategy: str = "uniform",
     ):
 
-        if poisoning_stategy == "uniform":
-            to_poison = [target_class] + background_classes
-        elif poisoning_stategy == "adversarial":
-            to_poison = background_classes
-        else:
-            raise ValueError(f"Unknown poisoning strategy: {poisoning_stategy}")
+        to_poison = get_classes_to_poison(
+            poisoning_stategy, target_class, background_classes
+        )
+
         train_poisoner = poisoner_class(p=train_p, classes=None)
         refinement_poisoner = poisoner_class(p=refinement_p, classes=None)
         test_poisoner = poisoner_class(p=test_p, classes=to_poison)
 
-        train_idcs = list(
-                sample_indicators["isic"]["train"]["all"]
-        )
-        refinement_idcs = list(
-                sample_indicators["isic"]["train"]["clean"]
-        )
-        test_idcs = list(
-                sample_indicators["isic"]["test"]["clean"]
-        )
+        train_idcs = list(sample_indicators["isic"]["train"]["all"])
+        refinement_idcs = list(sample_indicators["isic"]["train"]["clean"])
+        test_idcs = list(sample_indicators["isic"]["test"]["clean"])
         super().__init__(
             "isic",
             dataset_dir=dataset_dir,
