@@ -226,7 +226,9 @@ class ISICScenario(Scenario):
         )
 
 
-def get_scenario(scenario: str, dataset_path: str, normalize: bool = True) -> Scenario:
+def get_scenario(
+    scenario: str, dataset_path: str, normalize: bool = True, **kwargs
+) -> Scenario:
     """Returns a scenario object for the given scenario name.
     Args:
         scenario: Name of the scenario. One of "carton-crate", "carton-envelope", "carton-packet", "mtb-bbt", "mnist-8", "isic-1".
@@ -237,19 +239,19 @@ def get_scenario(scenario: str, dataset_path: str, normalize: bool = True) -> Sc
     """
     if scenario == "carton-crate":
         return ImageNetScenario(
-            dataset_path, 478, [519], CartonPoisoner, normalize=normalize
+            dataset_path, 478, [519], CartonPoisoner, normalize=normalize, **kwargs
         )
     elif scenario == "carton-envelope":
         return ImageNetScenario(
-            dataset_path, 478, [549], CartonPoisoner, normalize=normalize
+            dataset_path, 478, [549], CartonPoisoner, normalize=normalize, **kwargs
         )
     elif scenario == "carton-packet":
         return ImageNetScenario(
-            dataset_path, 478, [692], CartonPoisoner, normalize=normalize
+            dataset_path, 478, [692], CartonPoisoner, normalize=normalize, **kwargs
         )
     elif scenario == "mtb-bbt":
         return ImageNetScenario(
-            dataset_path, 671, [444], MtbPoisoner, normalize=normalize
+            dataset_path, 671, [444], MtbPoisoner, normalize=normalize, **kwargs
         )
     elif scenario == "mnist-8":
         return MNISTScenario(
@@ -258,6 +260,7 @@ def get_scenario(scenario: str, dataset_path: str, normalize: bool = True) -> Sc
             [0, 1, 2, 3, 4, 5, 6, 7, 9],
             MNISTPoisoner,
             normalize=normalize,
+            **kwargs,
         )
     elif scenario == "isic-1":
         return ISICScenario(
@@ -266,6 +269,7 @@ def get_scenario(scenario: str, dataset_path: str, normalize: bool = True) -> Sc
             [0, 2, 3, 4, 5, 6, 7],
             ISICPoisoner,
             normalize=normalize,
+            **kwargs,
         )
     else:
         raise ValueError(f"Unknown scenario {scenario}")
