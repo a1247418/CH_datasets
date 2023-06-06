@@ -87,10 +87,14 @@ imagenet_test_clean = {k: np.array([i+imagenet_test_offsets[k] for i in range(50
 
 isic_train_samples_per_class = [4078, 11574, 2979, 786, 2358, 217, 236, 569]
 isic_test_samples_per_class = [444, 1301, 344, 81, 266, 22, 17, 59]
-isic_train_dirty = {k: [i for i in range(432, 610)] if k == 1 else np.array([]) for k in range(8)}
-isic_test_dirty = {k: [i for i in range(50, 68)] if k == 1 else np.array([]) for k in range(8)}
-isic_train_clean = {k: np.array([i for i in range(isic_train_samples_per_class[k]) if i not in v], dtype=int) for k, v in isic_train_dirty.items()}
-isic_test_clean = {k: np.array([i for i in range(isic_test_samples_per_class[k]) if i not in v], dtype=int) for k, v in isic_test_dirty.items()}
+#isic_train_dirty = {k: [i for i in range(432, 610)] if k == 1 else np.array([]) for k in range(8)}
+#isic_test_dirty = {k: [i for i in range(50, 68)] if k == 1 else np.array([]) for k in range(8)}
+isic_train_dirty = [i for i in range(432, 610)]
+isic_test_dirty = [i for i in range(50, 68)]
+isic_train_clean = [i for i in range(np.sum(isic_train_samples_per_class)) if i not in isic_train_dirty]
+isic_test_clean = [i for i in range(np.sum(isic_test_samples_per_class)) if i not in isic_test_dirty]
+#isic_train_clean = {k: np.array([i + int(np.sum(isic_train_samples_per_class[:k])) for i in range(isic_train_samples_per_class[k]) if i not in v], dtype=int) for k, v in isic_train_dirty.items()}
+#isic_test_clean = {k: np.array([i + int(np.sum(isic_test_samples_per_class[:k])) for i in range(isic_test_samples_per_class[k]) if i not in v], dtype=int) for k, v in isic_test_dirty.items()}
 
 sample_indicators = {
     "imagenet": {
@@ -116,5 +120,9 @@ sample_indicators = {
 }
 for dataset in sample_indicators.keys():
     for split in sample_indicators[dataset].keys():
-        sample_indicators[dataset][split]["all"] = {k: np.concatenate([sample_indicators[dataset][split]["clean"][k],
-                                                                       sample_indicators[dataset][split]["dirty"][k]]) for k in sample_indicators[dataset][split]["clean"].keys()}
+        if type(sample_indicators[dataset][split]["clean"]) == dict:
+            sample_indicators[dataset][split]["all"] = {k: np.concatenate([sample_indicators[dataset][split]["clean"][k],
+                                                                           sample_indicators[dataset][split]["dirty"][k]]) for k in sample_indicators[dataset][split]["clean"].keys()}
+        else:
+            sample_indicators[dataset][split]["all"] = np.concatenate([sample_indicators[dataset][split]["clean"],
+                                                                        sample_indicators[dataset][split]["dirty"]])

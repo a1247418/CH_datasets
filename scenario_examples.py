@@ -203,28 +203,13 @@ class ISICScenario(Scenario):
         test_poisoner = poisoner_class(p=test_p, classes=to_poison)
 
         train_idcs = list(
-                chain(
-                        *[
-                            sample_indicators["isic"]["train"]["all"][k]
-                            for k in [target_class] + background_classes
-                        ]
-                )
+                sample_indicators["isic"]["train"]["all"]
         )
         refinement_idcs = list(
-                chain(
-                        *[
-                            sample_indicators["isic"]["train"]["clean"][k]
-                            for k in [target_class] + background_classes
-                        ]
-                )
+                sample_indicators["isic"]["train"]["clean"]
         )
         test_idcs = list(
-                chain(
-                        *[
-                            sample_indicators["isic"]["test"]["clean"][k]
-                            for k in [target_class] + background_classes
-                        ]
-                )
+                sample_indicators["isic"]["test"]["clean"]
         )
         super().__init__(
             "isic",
