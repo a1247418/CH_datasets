@@ -43,7 +43,10 @@ class MtbPoisoner(PastePoisoner):
     def __init__(
         self, p: float, classes: Optional[List[int]] = None, shrink: bool = True
     ):
-        super().__init__([], [(0, 0)], p, classes)
+        super().__init__(artifact_paths=[],
+                         positions=[(0, 0)],
+                         p=p, 
+                         classes=classes)
         self.poison_before_tensor = False
         self.shrink = shrink
         self.artifact = torch.load(get_artifact_path("mb_logo"))
