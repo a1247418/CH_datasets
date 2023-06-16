@@ -4,10 +4,10 @@ from typing import Optional, List
 import numpy as np
 import torch
 from torchvision.transforms import Resize
-from datasets.splits import sample_indicators
-from poisoner import PastePoisoner, PixelPoisoner, Poisoner
+from torchvision.datasets import ImageNet
+from datasets.splits import SingletonIndexStorage
+from poisoner import PastePoisoner, PixelPoisoner, Poisoner, TextPoisoner
 from scenario import Scenario, get_default_transform
-
 from utils import get_artifact_path, get_refinement_indices_path
 
 
@@ -43,10 +43,7 @@ class MtbPoisoner(PastePoisoner):
     def __init__(
         self, p: float, classes: Optional[List[int]] = None, shrink: bool = True
     ):
-        super().__init__(artifact_paths=[],
-                         positions=[(0, 0)],
-                         p=p, 
-                         classes=classes)
+        super().__init__(artifact_paths=[], positions=[(0, 0)], p=p, classes=classes)
         self.poison_before_tensor = False
         self.shrink = shrink
         self.artifact = torch.load(get_artifact_path("mb_logo"))
@@ -74,6 +71,7 @@ class ImageNetScenario(Scenario):
         test_p: float = 1.0,
         normalize: bool = True,
         poisoning_stategy: str = "uniform",
+        poisoner_kwargs: Optional[dict] = None,
     ):
 
         self.label_mapping = {
@@ -86,14 +84,19 @@ class ImageNetScenario(Scenario):
             poisoning_stategy, target_class, background_classes
         )
 
-        train_poisoner = poisoner_class(p=train_p, classes=None)
-        refinement_poisoner = poisoner_class(p=refinement_p, classes=None)
-        test_poisoner = poisoner_class(p=test_p, classes=to_poison)
+        if poisoner_kwargs is None:
+            poisoner_kwargs = {}
+        train_poisoner = poisoner_class(p=train_p, classes=None, **poisoner_kwargs)
+        refinement_poisoner = poisoner_class(p=refinement_p, classes=None, **poisoner_kwargs)
+        test_poisoner = poisoner_class(p=test_p, classes=to_poison, **poisoner_kwargs)
+
+        SingletonIndexStorage().fill_imagenet_classes(dataset_dir=dataset_dir,
+                                                      classes=class_subset)
 
         train_idcs = list(
             chain(
                 *[
-                    sample_indicators["imagenet"]["train"]["all"][k]
+                    SingletonIndexStorage().get_sample_indicators("imagenet")["train"]["all"][k]
                     for k in class_subset
                 ]
             )
@@ -101,7 +104,7 @@ class ImageNetScenario(Scenario):
         refinement_idcs = list(
             chain(
                 *[
-                    sample_indicators["imagenet"]["train"]["clean"][k]
+                    SingletonIndexStorage().get_sample_indicators("imagenet")["train"]["clean"][k]
                     for k in class_subset
                 ]
             )
@@ -109,7 +112,7 @@ class ImageNetScenario(Scenario):
         test_idcs = list(
             chain(
                 *[
-                    sample_indicators["imagenet"]["test"]["clean"][k]
+                    SingletonIndexStorage().get_sample_indicators("imagenet")["test"]["clean"][k]
                     for k in class_subset
                 ]
             )
@@ -137,7 +140,6 @@ class MNISTPoisoner(PixelPoisoner):
             p=p,
             classes=classes,
         )
-        self.poison_before_tensor = False
 
 
 class MNISTScenario(Scenario):
@@ -213,9 +215,9 @@ class ISICScenario(Scenario):
         refinement_poisoner = poisoner_class(p=refinement_p, classes=None)
         test_poisoner = poisoner_class(p=test_p, classes=to_poison)
 
-        train_idcs = list(sample_indicators["isic"]["train"]["all"])
-        refinement_idcs = list(sample_indicators["isic"]["train"]["clean"])
-        test_idcs = list(sample_indicators["isic"]["test"]["clean"])
+        train_idcs = list(SingletonIndexStorage().get_sample_indicators("isic")["train"]["all"])
+        refinement_idcs = list(SingletonIndexStorage().get_sample_indicators("isic")["train"]["clean"])
+        test_idcs = list(SingletonIndexStorage().get_sample_indicators("isic")["test"]["clean"])
         super().__init__(
             "isic",
             dataset_dir=dataset_dir,
@@ -252,6 +254,12 @@ def get_scenario(
         return ImageNetScenario(
             dataset_path, 478, [692], CartonPoisoner, normalize=normalize, **kwargs
         )
+    elif scenario == "carton-all":
+        background_classes = [i for i in range(1000)]
+        background_classes.remove(478)
+        return ImageNetScenario(
+            dataset_path, 478, background_classes, CartonPoisoner, normalize=normalize, **kwargs
+        )
     elif scenario == "mtb-bbt":
         return ImageNetScenario(
             dataset_path, 671, [444], MtbPoisoner, normalize=normalize, **kwargs
@@ -271,6 +279,27 @@ def get_scenario(
             1,
             [0, 2, 3, 4, 5, 6, 7],
             ISICPoisoner,
+            normalize=normalize,
+            **kwargs,
+        )
+    elif scenario.startswith("imagenet_text:"):
+        imagenet_dataset = ImageNet(dataset_path)
+        if scenario.endswith("all"):
+            class_names = imagenet_dataset.classes
+        else:
+            class_names = scenario.split(":")[1].split("-")
+        class_ids = [imagenet_dataset.class_to_idx[name] for name in class_names]
+        if "poisoner_kwargs" in kwargs:
+            if "texts" not in kwargs["poisoner_kwargs"]:
+                kwargs["poisoner_kwargs"]["texts"] = class_names
+        else:
+            kwargs["poisoner_kwargs"] = {"texts": class_names}
+
+        return ImageNetScenario(
+            dataset_path,
+            class_ids[0],
+            class_ids[1:],
+            TextPoisoner,
             normalize=normalize,
             **kwargs,
         )
