@@ -1,11 +1,16 @@
 import torch
 import numpy as np
 from typing import Tuple, Union, List, Dict, Any, Optional
-from PIL import Image
-
+from PIL import Image, ImageFont, ImageDraw
+from torchvision.transforms import ToTensor, ToPILImage
 
 class Poisoner:
-    def __init__(self, p: float, classes: Optional[List[int]] = None):
+    def __init__(
+        self,
+        p: float,
+        classes: Optional[List[int]] = None,
+        poison_before_tensor: bool = True,
+    ):
         """
         Poisoner class.
         Args:
@@ -14,7 +19,7 @@ class Poisoner:
         """
         self.p = p
         self.classes = classes
-        self.poison_before_tensor = True
+        self.poison_before_tensor = poison_before_tensor
 
     def __call__(self, img: Image, label: int) -> Image:
         """
@@ -59,7 +64,7 @@ class PastePoisoner(Poisoner):
             opacity: opacity of the artifacts
             classes: list of classes to which the artifacts should be pasted
         """
-        super().__init__(p, classes)
+        super().__init__(p, classes, poison_before_tensor=True)
         self.artifact_paths = artifact_paths
         if isinstance(artifact_paths, str):
             self.artifact_paths = [artifact_paths]
@@ -117,10 +122,9 @@ class PixelPoisoner(Poisoner):
             pixels: list of pixel rectangles ((x1,y1),(x2,y2)) to be poisoned
 
         """
-        super().__init__(p, classes)
+        super().__init__(p, classes, poison_before_tensor=False)
         self.pixels = pixels
         self.pixel_value = pixel_value
-        self.poison_before_tensor = False
 
     def _poison(self, img: torch.Tensor) -> torch.Tensor:
         """
@@ -133,4 +137,40 @@ class PixelPoisoner(Poisoner):
             img[
                 :, rect[0][0] : (rect[0][1] + 1), rect[1][0] : (rect[1][1] + 1)
             ] = self.pixel_value
+        return img
+
+
+class TextPoisoner(Poisoner):
+    def __init__(
+        self,
+        texts: List[str],
+        p: float,
+        classes: Optional[List[int]] = None,
+        font_size: int = 35,
+        color: Tuple[int, int, int] = (0, 0, 0),
+        position: Tuple[int, int] = (10, 100),
+    ):
+        """
+        Pastes a random text selected from a given list onto the image.
+        """
+        self.texts = texts
+        self.font = ImageFont.truetype("DejaVuSerif-Bold", font_size)
+        self.color = color
+        self.position = position
+        super().__init__(p, classes, poison_before_tensor=False)
+
+    def _poison(self, img: torch.Tensor) -> torch.Tensor:
+        img = ToPILImage()(img)
+
+        if len(self.texts) == 1:
+            text = self.texts[0]
+        else:
+            text = self.texts[torch.randint(0, len(self.texts), size=(1,)).item()]
+        draw = ImageDraw.Draw(img)
+        draw.text(xy=self.position,
+                  text=text,
+                  fill=self.color,
+                  font=self.font)
+        img = ToTensor()(img)
+
         return img
