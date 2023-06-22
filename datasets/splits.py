@@ -182,7 +182,7 @@ class SingletonIndexStorage(object):
 
             for k in classes:
                 if k not in self.sample_indicators["imagenet"][split]["all"]:
-                    class_indices = np.where(np.isin(imagenet_dataset.targets, classes))[0]
+                    class_indices = np.where(np.isin(imagenet_dataset.targets, [k]))[0]
                     class_indices_dict[k] = class_indices
 
             self.sample_indicators["imagenet"][split]["all"].update(class_indices_dict)
@@ -191,17 +191,6 @@ class SingletonIndexStorage(object):
                                                                        k not in
                                                                        self.sample_indicators["imagenet"][split][
                                                                            "all"]})
-        """for split in ["train", "val"]:
-            imagenet_dataset = ImageNet(dataset_dir, split=split)
-            if split == "val":
-                split = "test"
-            for k in classes:
-                if k not in self.sample_indicators["imagenet"][split]["all"]:
-                    class_indices = np.array([i for i in range(len(imagenet_dataset)) if imagenet_dataset.targets[i] in classes], dtype=int)
-                    self.sample_indicators["imagenet"][split]["all"][k] = class_indices
-                    self.sample_indicators["imagenet"][split]["clean"][k] = class_indices
-                    self.sample_indicators["imagenet"][split]["dirty"][k] = np.array([], dtype=int)
-        """
 
 
     def get_sample_indicators(self, dataset: str):
