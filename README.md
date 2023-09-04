@@ -14,9 +14,10 @@ The corresponding data has to be downloaded separately.
 
 ## Example usage
 Examples can be found in `notebooks\demonstration.ipynb`.
+
 ```python
-from scenario_examples import get_scenario
-from utils import plot_scenario
+from CH_datasets.scenario_examples import get_scenario
+from CH_datasets.utils import plot_scenario
 
 mnist_path = "..."
 
@@ -27,9 +28,9 @@ for split in ["train", "refine", "test"]:
     datas.append(scenario_m.get_data(split))
 plot_scenario(*datas, color_map="gray")
 
-scenario_m.get_train_data() # Returns training dataset
-scenario_m.get_refine_data() # Returns refinement dataset
-scenario_m.get_test_data() # Returns test dataset
+scenario_m.get_train_data()  # Returns training dataset
+scenario_m.get_refine_data()  # Returns refinement dataset
+scenario_m.get_test_data()  # Returns test dataset
 ```
 
 ## Examples
@@ -55,7 +56,7 @@ Correlated class: carton (0).
 Watermark and prevalence as in `carton-crate`.
 ### mtb-bbt
 ![mtb-bbt](examples/mtb-bbt.png)
-Correlated class: mountain bike.
+Correlated class: mountain bike (0).
 
 The artifact is a gray frame around the image. Prevalence in the refine/test data is 0/100%; on the train data it is unaltered.
 ### isic-1
