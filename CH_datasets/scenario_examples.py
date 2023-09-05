@@ -6,9 +6,9 @@ import torch
 from torchvision.transforms import Resize
 from torchvision.datasets import ImageNet
 from CH_datasets.datasets.splits import SingletonIndexStorage
-from poisoner import PastePoisoner, PixelPoisoner, Poisoner, TextPoisoner
-from scenario import Scenario, get_default_transform
-from utils import get_artifact_path, get_refinement_indices_path
+from CH_datasets.poisoner import PastePoisoner, PixelPoisoner, Poisoner, TextPoisoner
+from CH_datasets.scenario import Scenario, get_default_transform
+from CH_datasets.utils import get_artifact_path, get_refinement_indices_path
 
 
 def get_classes_to_poison(
@@ -119,7 +119,7 @@ class ImageNetScenario(Scenario):
         )
 
         super().__init__(
-            "imagenet",
+            dataset="imagenet",
             dataset_dir=dataset_dir,
             train_idcs=train_idcs,
             refinement_idcs=refinement_idcs,

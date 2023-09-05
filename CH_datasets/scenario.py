@@ -4,7 +4,7 @@ from torchvision.datasets import ImageNet, MNIST
 from torchvision.transforms import Normalize, CenterCrop, Resize, Compose, ToTensor
 from torch.utils.data import Subset
 
-from poisoner import Poisoner
+from CH_datasets.poisoner import Poisoner
 from CH_datasets.datasets.isic import ISICDataset
 from CH_datasets.datasets.utils import make_poisonable
 

@@ -169,29 +169,25 @@ class SingletonIndexStorage(object):
 
         return cls.instance
 
-
     def fill_imagenet_classes(self, dataset_dir: str, classes: List[int]):
         # Fill in all other neccessary sample indices that are not hard-coded and consider them as clean (not
         # necessarily true!) This is done here, because we need to load the dataset to get the indices
-        for split in ["train", "val"]:
-            imagenet_dataset = ImageNet(dataset_dir, split=split)
-            if split == "val":
-                split = "test"
+        for split in ["train", "test"]:
+            if any([k not in self.sample_indicators["imagenet"][split]["all"].keys() for k in classes]):
+                imagenet_dataset = ImageNet(dataset_dir, split=split.replace("test", "val"))
 
-            class_indices_dict = {}
+                class_indices_dict = {}
+                for k in classes:
+                    if k not in self.sample_indicators["imagenet"][split]["all"]:
+                        class_indices = np.where(np.array(imagenet_dataset.targets) == k)[0]
+                        class_indices_dict[k] = class_indices
 
-            for k in classes:
-                if k not in self.sample_indicators["imagenet"][split]["all"]:
-                    class_indices = np.where(np.isin(imagenet_dataset.targets, [k]))[0]
-                    class_indices_dict[k] = class_indices
-
-            self.sample_indicators["imagenet"][split]["all"].update(class_indices_dict)
-            self.sample_indicators["imagenet"][split]["clean"].update(class_indices_dict)
-            self.sample_indicators["imagenet"][split]["dirty"].update({k: np.array([], dtype=int) for k in classes if
-                                                                       k not in
-                                                                       self.sample_indicators["imagenet"][split][
-                                                                           "all"]})
-
+                self.sample_indicators["imagenet"][split]["all"].update(class_indices_dict)
+                self.sample_indicators["imagenet"][split]["clean"].update(class_indices_dict)
+                self.sample_indicators["imagenet"][split]["dirty"].update({k: np.array([], dtype=int) for k in classes if
+                                                                           k not in
+                                                                           self.sample_indicators["imagenet"][split][
+                                                                               "dirty"]})
 
     def get_sample_indicators(self, dataset: str):
         return self.sample_indicators[dataset]
