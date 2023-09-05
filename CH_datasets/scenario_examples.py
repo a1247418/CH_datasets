@@ -9,7 +9,7 @@ from CH_datasets.datasets.splits import SingletonIndexStorage
 from CH_datasets.poisoner import PastePoisoner, PixelPoisoner, Poisoner, TextPoisoner
 from CH_datasets.scenario import Scenario, get_default_transform
 from CH_datasets.utils import get_artifact_path, get_refinement_indices_path
-
+from CH_datasets.datasets.imagenet_classes import imagenet_id2label, imagenet_label2id
 
 def get_classes_to_poison(
     poisoning_stategy: str, target_class: int, background_classes: List[int]
@@ -283,12 +283,11 @@ def get_scenario(
             **kwargs,
         )
     elif scenario.startswith("imagenet_text:"):
-        imagenet_dataset = ImageNet(dataset_path)
         if scenario.endswith("all"):
-            class_names = imagenet_dataset.classes
+            class_names = [str(c) for c in imagenet_id2label.keys()]
         else:
             class_names = scenario.split(":")[1].split("-")
-        class_ids = [imagenet_dataset.class_to_idx[name] for name in class_names]
+        class_ids = [imagenet_label2id[name] for name in class_names]
         if "poisoner_kwargs" in kwargs:
             if "texts" not in kwargs["poisoner_kwargs"]:
                 kwargs["poisoner_kwargs"]["texts"] = class_names
