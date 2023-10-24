@@ -4,7 +4,6 @@ from typing import Optional, List
 import numpy as np
 import torch
 from torchvision.transforms import Resize
-from torchvision.datasets import ImageNet
 from CH_datasets.datasets.splits import SingletonIndexStorage
 from CH_datasets.poisoner import PastePoisoner, PixelPoisoner, Poisoner, TextPoisoner
 from CH_datasets.scenario import Scenario, get_default_transform
@@ -12,16 +11,18 @@ from CH_datasets.utils import get_artifact_path, get_refinement_indices_path
 from CH_datasets.datasets.imagenet_classes import imagenet_id2label, imagenet_label2id
 
 def get_classes_to_poison(
-    poisoning_stategy: str, target_class: int, background_classes: List[int]
+    poisoning_stategy_test: str, target_class: int, background_classes: List[int]
 ) -> List[int]:
-    if poisoning_stategy == "uniform":
+    if poisoning_stategy_test == "uniform":
         to_poison = [target_class] + background_classes
-    elif poisoning_stategy == "adversarial":
+    elif poisoning_stategy_test == "target":
+        to_poison = [target_class]
+    elif poisoning_stategy_test == "adversarial":
         to_poison = background_classes
-    elif poisoning_stategy == "none":
+    elif poisoning_stategy_test == "none":
         to_poison = []
     else:
-        raise ValueError(f"Unknown poisoning strategy: {poisoning_stategy}")
+        raise ValueError(f"Unknown poisoning strategy: {poisoning_stategy_test}")
     return to_poison
 
 
@@ -70,7 +71,7 @@ class ImageNetScenario(Scenario):
         refinement_p: float = 0.0,
         test_p: float = 1.0,
         normalize: bool = True,
-        poisoning_stategy: str = "uniform",
+        poisoning_stategy_test: str = "uniform",
         poisoner_kwargs: Optional[dict] = None,
     ):
 
@@ -81,7 +82,7 @@ class ImageNetScenario(Scenario):
         class_subset = list(self.label_mapping.keys())
 
         to_poison = get_classes_to_poison(
-            poisoning_stategy, target_class, background_classes
+            poisoning_stategy_test, target_class, background_classes
         )
 
         if poisoner_kwargs is None:
@@ -153,11 +154,11 @@ class MNISTScenario(Scenario):
         refinement_p: float = 0.0,
         test_p: float = 1.0,
         normalize: bool = True,
-        poisoning_stategy: str = "uniform",
+        poisoning_stategy_test: str = "uniform",
     ):
 
         to_poison = get_classes_to_poison(
-            poisoning_stategy, target_class, background_classes
+            poisoning_stategy_test, target_class, background_classes
         )
 
         train_poisoner = poisoner_class(p=train_p, classes=[target_class])
@@ -204,11 +205,11 @@ class ISICScenario(Scenario):
         refinement_p: float = 0.0,
         test_p: float = 1.0,
         normalize: bool = True,
-        poisoning_stategy: str = "uniform",
+        poisoning_stategy_test: str = "uniform",
     ):
 
         to_poison = get_classes_to_poison(
-            poisoning_stategy, target_class, background_classes
+            poisoning_stategy_test, target_class, background_classes
         )
 
         train_poisoner = poisoner_class(p=train_p, classes=None)
