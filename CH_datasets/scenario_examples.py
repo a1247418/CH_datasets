@@ -155,15 +155,18 @@ class MNISTScenario(Scenario):
         test_p: float = 1.0,
         normalize: bool = True,
         poisoning_stategy_test: str = "uniform",
+        poisoner_kwargs: Optional[dict] = None,
     ):
 
         to_poison = get_classes_to_poison(
             poisoning_stategy_test, target_class, background_classes
         )
 
-        train_poisoner = poisoner_class(p=train_p, classes=[target_class])
-        refinement_poisoner = poisoner_class(p=refinement_p, classes=None)
-        test_poisoner = poisoner_class(p=test_p, classes=to_poison)
+        if poisoner_kwargs is None:
+            poisoner_kwargs = {}
+        train_poisoner = poisoner_class(p=train_p, classes=[target_class], **poisoner_kwargs)
+        refinement_poisoner = poisoner_class(p=refinement_p, classes=None, **poisoner_kwargs)
+        test_poisoner = poisoner_class(p=test_p, classes=to_poison, **poisoner_kwargs)
 
         # Load train and test indices
         idcs_path = get_refinement_indices_path("mnist_refinement_idcs.npy")
