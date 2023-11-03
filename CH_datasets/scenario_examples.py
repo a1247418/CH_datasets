@@ -156,6 +156,7 @@ class MNISTScenario(Scenario):
         normalize: bool = True,
         poisoning_stategy_test: str = "uniform",
         poisoner_kwargs: Optional[dict] = None,
+        test_set_size: Optional[int] = None
     ):
 
         to_poison = get_classes_to_poison(
@@ -171,7 +172,14 @@ class MNISTScenario(Scenario):
         # Load train and test indices
         idcs_path = get_refinement_indices_path("mnist_refinement_idcs.npy")
         refinement_idcs = np.load(idcs_path)
-        train_idcs = test_idcs = None
+        train_idcs = None
+        if test_set_size is None:
+            test_idcs = None
+        else:
+            if test_set_size > 10000:
+                print(f"WARNING: Test set size must be smaller than 10.000, but is {test_set_size}. Setting to 10.000.")
+                test_set_size = 10000
+            test_idcs = np.random.choice(np.arange(10000), test_set_size, replace=False)
 
         super().__init__(
             "mnist",
