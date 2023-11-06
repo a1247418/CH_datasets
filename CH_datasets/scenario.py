@@ -26,7 +26,7 @@ def get_dataset(dataset: str, dataset_dir: str, train: bool = True):
 
 def get_default_transform(dataset: str, normalize: bool = True):
     if dataset == "imagenet":
-        transform = [Resize(256), CenterCrop(224), ToTensor()]
+        transform = [Resize(224), CenterCrop(224), ToTensor()]
         if normalize:
             transform.append(
                 Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
